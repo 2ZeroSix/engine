@@ -75,7 +75,7 @@ std::unique_ptr<RuntimeController> RuntimeController::Spawn(
   result->spawning_isolate_ = root_isolate_;
   return result;
 }
-
+RuntimeController
 RuntimeController::~RuntimeController() {
   FML_DCHECK(Dart_CurrentIsolate() == nullptr);
   std::shared_ptr<DartIsolate> root_isolate = root_isolate_.lock();

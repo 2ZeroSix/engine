@@ -1,4 +1,3 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -506,16 +505,13 @@ bool FlutterPlatformViewsController::SubmitFrameGpuSafe(GrDirectContext* gr_cont
 
     // Check if the current picture contains overlays that intersect with the
     // current platform view or any of the previous platform views.
+    SkRect overlay_rect;
     for (size_t j = i + 1; j > 0; j--) {
       int64_t current_platform_view_id = composition_order_[j - 1];
       SkRect platform_view_rect = GetPlatformViewRect(current_platform_view_id);
       std::list<SkRect> intersection_rects =
           rtree->searchNonOverlappingDrawnRects(platform_view_rect);
       auto allocation_size = intersection_rects.size();
-
-      // For testing purposes, the overlay id is used to find the overlay view.
-      // This is the index of the layer for the current platform view.
-      auto overlay_id = platform_view_layers[current_platform_view_id].size();
 
       // If the max number of allocations per platform view is exceeded,
       // then join all the rects into a single one.
@@ -541,22 +537,31 @@ bool FlutterPlatformViewsController::SubmitFrameGpuSafe(GrDirectContext* gr_cont
         // For example, {0.3, 0.5, 3.1, 4.7} becomes {0, 0, 4, 5}.
         joined_rect.setLTRB(std::floor(joined_rect.left()), std::floor(joined_rect.top()),
                             std::ceil(joined_rect.right()), std::ceil(joined_rect.bottom()));
-        // Clip the background canvas, so it doesn't contain any of the pixels drawn
-        // on the overlay layer.
-        background_canvas->clipRect(joined_rect, SkClipOp::kDifference);
-        // Get a new host layer.
-        std::shared_ptr<FlutterPlatformViewLayer> layer = GetLayer(gr_context,                //
-                                                                   ios_context,               //
-                                                                   picture,                   //
-                                                                   joined_rect,               //
-                                                                   current_platform_view_id,  //
-                                                                   overlay_id                 //
-        );
-        did_submit &= layer->did_submit_last_frame;
-        platform_view_layers[current_platform_view_id].push_back(layer);
-        overlay_id++;
+
+        if (overlay_rect.isEmpty() || joined_rect.contains(overlay_rect)) {
+          overlay_rect = joined_rect;
+        } else {
+          overlay_rect.join(joined_rect);
+        }
       }
     }
+
+    if (!overlay_rect.isEmpty()) {
+      // Clip the background canvas, so it doesn't contain any of the pixels drawn
+      // on the overlay layer.
+      background_canvas->clipRect(overlay_rect, SkClipOp::kDifference);
+      // Get a new host layer.
+      std::shared_ptr<FlutterPlatformViewLayer> layer = GetLayer(gr_context,        //
+                                                                 ios_context,       //
+                                                                 picture,           //
+                                                                 overlay_rect,      //
+                                                                 platform_view_id,  //
+                                                                 0                  //
+      );
+      did_submit &= layer->did_submit_last_frame;
+      platform_view_layers[platform_view_id].push_back(layer);
+    }
+
     background_canvas->drawPicture(picture);
   }
   // If a layer was allocated in the previous frame, but it's not used in the current frame,

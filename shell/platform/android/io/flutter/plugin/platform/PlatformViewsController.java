@@ -144,12 +144,6 @@ public class PlatformViewsController implements PlatformViewsAccessibilityDelega
           }
 
           final PlatformView platformView = factory.create(context, request.viewId, createParams);
-          // If our FlutterEngine is already attached to a Flutter UI, provide that Android
-          // View to this new platform view.
-          if (flutterView != null) {
-            platformView.onFlutterViewAttached(flutterView);
-          }
-
           platformViews.put(request.viewId, platformView);
         }
 
@@ -482,12 +476,6 @@ public class PlatformViewsController implements PlatformViewsAccessibilityDelega
     for (VirtualDisplayController controller : vdControllers.values()) {
       controller.onFlutterViewAttached(flutterView);
     }
-
-    for (int i = 0; i < platformViewParent.size(); i++) {
-      int viewId = platformViewParent.keyAt(i);
-      ((FlutterView) flutterView).addView(platformViewParent.get(viewId));
-      platformViews.get(viewId).onFlutterViewAttached(flutterView);
-    }
   }
 
   /**
@@ -502,12 +490,6 @@ public class PlatformViewsController implements PlatformViewsAccessibilityDelega
     // a Flutter View.
     for (VirtualDisplayController controller : vdControllers.values()) {
       controller.onFlutterViewDetached();
-    }
-
-    for (int i = 0; i < platformViewParent.size(); i++) {
-      int viewId = platformViewParent.keyAt(i);
-      ((FlutterView) flutterView).removeView(platformViewParent.get(viewId));
-      platformViews.get(viewId).onFlutterViewDetached();
     }
 
     destroyOverlaySurfaces();
@@ -756,6 +738,7 @@ public class PlatformViewsController implements PlatformViewsAccessibilityDelega
     platformViewParent.put(viewId, parentView);
     parentView.addView(platformView.getView());
     ((FlutterView) flutterView).addView(parentView);
+    platformView.onFlutterViewAttached(flutterView);
   }
 
   public void attachToFlutterRenderer(FlutterRenderer flutterRenderer) {
