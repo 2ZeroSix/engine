@@ -92,7 +92,7 @@ vars = {
   'ocmock_rev': 'c4ec0e3a7a9f56cfdbd0aa01f4f97bb4b75c5ef8', # v3.7.1
 
   # Download a prebuilt Dart SDK by default
-  'download_dart_sdk': True,
+  'download_dart_sdk': False,
 
   # Download a prebuilt esbuild by default
   'download_esbuild': True,
