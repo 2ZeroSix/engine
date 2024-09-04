@@ -178,6 +178,7 @@ android_java_sources = [
   "io/flutter/embedding/android/FlutterActivity.java",
   "io/flutter/embedding/android/FlutterActivityAndFragmentDelegate.java",
   "io/flutter/embedding/android/FlutterActivityLaunchConfigs.java",
+  "io/flutter/embedding/android/FlutterAppCompatActivity.java",
   "io/flutter/embedding/android/FlutterEngineConfigurator.java",
   "io/flutter/embedding/android/FlutterEngineProvider.java",
   "io/flutter/embedding/android/FlutterFragment.java",
